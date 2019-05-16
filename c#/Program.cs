@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
+using Backend.Domain;
+using Backend.Tests;
 
 namespace Backend
 {
@@ -26,13 +28,14 @@ namespace Backend
             else
             {
                 InitRepositories(conn);
-                var countryPopulations = await GetCountryPopulations(_dbRepository, _statRepository);
+                var manager = new CountryPopulationsManager(_dbRepository, _statRepository);
+                var countryPopulations = await manager.GetCountryPopulations();
                 OutputCountryPopulations(countryPopulations);
             }
 
             // Uncomment to run tests.
-            // new GivenEmptyRepositories_WhenGetCountryPopulations_ThenEmptyList().Execute();
-            // new GivenActualData_WhenGetCountryPopulations_ThenValidateList().Execute();
+            //new GivenEmptyRepositories_WhenGetCountryPopulations_ThenEmptyList().Execute();
+            //new GivenActualData_WhenGetCountryPopulations_ThenValidList().Execute();
 
             Console.WriteLine("Completed");
         }
@@ -50,25 +53,6 @@ namespace Backend
             {
                 Console.WriteLine($"{country.CountryName} : {country.Population}");
             }
-        }
-
-        public async static Task<ICollection<Country>> GetCountryPopulations(ICountryRepository dbRepository, ICountryRepository statRepository)
-        {
-            Task<ICollection<Country>> dbCountriesTask = dbRepository.GetCountryPopulationsAsync();
-            Task<ICollection<Country>> statCountriesTask = statRepository.GetCountryPopulationsAsync();
-            await Task.WhenAll(dbCountriesTask, statCountriesTask);
-            return CombineLists(dbCountriesTask.Result, statCountriesTask.Result);
-            //var countryPopulations = CombineLists(dbCountriesTask.Result, statCountriesTask.Result);
-            //return countryPopulations;
-        }
-
-        private static ICollection<Country> CombineLists(ICollection<Country> dbList, ICollection<Country> statList)
-        {
-            var combinedLists = (from stc in statList
-                                      where !(from dbc in dbList select dbc.CountryName).Contains(stc.CountryName)              
-                                      select stc)
-                                      .Concat(dbList).OrderBy(c => c.CountryName).ToList();
-            return combinedLists;
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Threading.Tasks;
+using Backend.Domain;
 using Backend.Models;
 using Backend.Repositories;
 
@@ -22,7 +23,8 @@ namespace Backend.Tests
         {
             var dbRepository = new EmptyRepository();
             var statRepository = new EmptyRepository();
-            var countryPopulations = Program.GetCountryPopulations(dbRepository, statRepository).Result;
+            var manager = new CountryPopulationsManager(dbRepository, statRepository);
+            var countryPopulations = manager.GetCountryPopulations().Result;
             Validate(countryPopulations);
         }
 
